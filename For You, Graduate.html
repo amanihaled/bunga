@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>For You, Graduate</title>
+<style>
+:root{--bg:#fdf8f3;--card:#fff;--ink:#2a2230;--muted:#7a6f80;--line:#eadfe6;--accent:#d946a0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17131b;--card:#221c28;--ink:#f3ecf5;--muted:#a99db0;--line:#352c3d;--accent:#f472b6}}
+:root[data-theme="dark"]{--bg:#17131b;--card:#221c28;--ink:#f3ecf5;--muted:#a99db0;--line:#352c3d;--accent:#f472b6}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,'Times New Roman',serif}
+main{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:20px 16px 40px}
+.screen{display:none}.screen.on{display:block}
+.center{text-align:center;padding:24px 0}
+.big{font-size:clamp(28px,6vw,48px);line-height:1.25;margin:14px auto;max-width:720px}
+.cap{font-size:22px;font-style:italic;min-height:30px;text-align:center}
+.emoji{font-size:64px}
+h2{font-size:26px;margin:6px 0 2px}
+.sub{color:var(--muted);margin:0 0 14px;font-family:system-ui,sans-serif;font-size:14px}
+.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
+.stage{display:flex;flex-direction:column;align-items:center;gap:10px}
+.view{width:100%;max-width:380px;border-radius:16px;overflow:hidden;margin:0 auto}
+.view svg{display:block;width:100%;height:auto}
+.ctl{font-family:system-ui,sans-serif;font-size:14px;display:grid;gap:12px;align-content:start}
+.row{display:grid;grid-template-columns:104px 1fr auto;align-items:center;gap:10px}
+.row label{color:var(--muted)}
+.row span{min-width:28px;text-align:right;color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=color]{width:38px;height:28px;border:1px solid var(--line);border-radius:6px;padding:0;background:none}
+input[type=text]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+button{font:inherit;font-family:system-ui,sans-serif;font-size:14px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button.on,button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+button:disabled{opacity:.45;cursor:default}
+.sw{display:flex;gap:6px;flex-wrap:wrap}
+.sw i{width:24px;height:24px;border-radius:50%;border:2px solid var(--card);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;min-height:56px}
+.thumbs button{padding:2px;border-radius:12px;width:56px;height:56px;background:#fff1e6}
+.thumbs svg{width:100%;height:100%}
+.hint{color:var(--muted);font-size:13px}
+.hide{display:none}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-top:26px;min-height:40px}
+.dots{display:flex;gap:8px}.dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--accent)}
+.petals{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;display:none}
+.petals.on{display:block}
+.petals span{position:absolute;top:-30px;border-radius:70% 0 70% 0;opacity:.7;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(115vh) rotate(540deg)}}
+.pop{animation:pop .7s cubic-bezier(.3,1.5,.5,1) both}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.petals{display:none!important}.pop{animation:none}}
+</style>
+</head>
+<body>
+<div class="petals" id="petals"></div>
+<main>
+
+<section id="s1" class="screen on center">
+  <div class="emoji">🎓</div>
+  <h1 class="big">Congratulations on your graduation and earning the Dean’s List award</h1>
+</section>
+
+<section id="s2" class="screen center">
+  <h1 class="big">Since I’m afar, here’s the flower</h1>
+  <div class="view" id="gview"></div>
+</section>
+
+<section id="s3" class="screen">
+  <h2>Make your own</h2>
+  <p class="sub">Design flowers, then gather up to nine into a bouquet.</p>
+  <div class="tabs"><button id="t1" class="on">1. Design a flower</button><button id="t2">2. Your bouquet (0)</button></div>
+
+  <div id="p1" class="grid">
+    <div class="card stage"><div class="view" id="view"></div><div class="cap" id="cap"></div>
+      <button class="pri" id="add">Add to bouquet</button></div>
+    <div class="card ctl">
+      <input type="text" id="name" maxlength="28" placeholder="Name your flower" aria-label="Flower name">
+      <div class="row"><label>Petals</label><input type="range" id="petals_r" min="3" max="24"><span id="petals_v"></span></div>
+      <div class="row"><label>Size</label><input type="range" id="length" min="70" max="150"><span id="length_v"></span></div>
+      <div class="row"><label>Petal width</label><input type="range" id="width" min="20" max="70"><span id="width_v"></span></div>
+      <div class="row"><label>Centre size</label><input type="range" id="cr" min="12" max="44"><span id="cr_v"></span></div>
+      <div class="seg" id="shape"></div>
+      <div class="seg" id="layers"></div>
+      <div class="row"><label>Petal colour</label><div class="sw" id="sw"></div><input type="color" id="c1"></div>
+      <div class="row"><label>Inner petals</label><span></span><input type="color" id="c2"></div>
+      <div class="row"><label>Centre</label><span></span><input type="color" id="cc"></div>
+      <div class="row"><label>Stem</label><span></span><input type="color" id="stem"></div>
+      <div class="row"><label>Background</label><span></span><input type="color" id="bg"></div>
+      <div class="seg" id="leaves"></div>
+      <div class="seg"><button id="rand">Surprise me</button><button id="reset">Reset</button></div>
+    </div>
+  </div>
+
+  <div id="p2" class="grid hide">
+    <div class="card stage"><div class="view" id="bview"></div><div class="cap" id="bcap"></div></div>
+    <div class="card ctl">
+      <div class="hint">Tap a flower below to remove it. Add more from the design tab.</div>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="row"><label>Wrapping</label><span></span><input type="color" id="wrap"></div>
+      <div class="row"><label>Ribbon</label><span></span><input type="color" id="rib"></div>
+      <div class="seg" id="filler"></div>
+      <div class="seg"><button id="more">Design another flower</button><button id="clear">Clear bouquet</button></div>
+    </div>
+  </div>
+</section>
+
+<div class="nav"><button id="back">Back</button><div class="dots"><i></i><i></i><i></i></div><button id="next" class="pri">Next</button></div>
+</main>
+<script>
+var DEF={name:'',petals:12,length:115,width:44,cr:28,shape:'round',layers:2,c1:'#f472b6',c2:'#fbcfe8',cc:'#facc15',stem:'#4d7c0f',bg:'#fff1e6',leaves:true};
+var S=Object.assign({},DEF),B=[],BO={wrap:'#f5e6c8',rib:'#d946a0',filler:true};
+var GBO={wrap:'#fdf0f5',rib:'#c9a227',filler:true};
+var PAL=['#f472b6','#ef4444','#f97316','#facc15','#a78bfa','#60a5fa','#f8fafc','#34d399'];
+var LIGHT={'#f472b6':'#fbcfe8','#ef4444':'#fecaca','#f97316':'#fed7aa','#facc15':'#fef08a','#a78bfa':'#ddd6fe','#60a5fa':'#bfdbfe','#f8fafc':'#fde68a','#34d399':'#a7f3d0'};
+var SLOTS=[[200,170,.42],[130,185,.38],[270,185,.38],[200,100,.36],[85,235,.34],[315,235,.34],[150,250,.36],[250,250,.36],[200,280,.34]];
+var FILL=[[60,170],[340,170],[110,110],[290,110],[160,60],[240,60],[45,260],[355,260],[200,45]];
+function mk(c1,c2,cc,n,L,W,sh,ly,cr){return {name:'',petals:n,length:L,width:W,cr:cr,shape:sh,layers:ly,c1:c1,c2:c2,cc:cc,stem:'#4d7c0f',bg:'#fff1e6',leaves:false}}
+var GIFT=[mk('#f472b6','#fbcfe8','#facc15',14,115,44,'round',2,28),mk('#ef4444','#fecaca','#fde047',10,110,48,'notched',2,24),
+mk('#facc15','#fef08a','#92400e',16,105,26,'pointed',2,32),mk('#a78bfa','#ddd6fe','#facc15',12,112,40,'round',2,26),
+mk('#60a5fa','#bfdbfe','#f8fafc',14,108,28,'pointed',2,24),mk('#f8fafc','#fde68a','#f97316',9,115,50,'round',2,26),
+mk('#f97316','#fed7aa','#7c2d12',12,100,36,'notched',2,30),mk('#fb7185','#fecdd3','#fde047',8,112,52,'round',1,22),
+mk('#fda4af','#ffe4e6','#f59e0b',16,102,30,'pointed',2,26)];
+function $(i){return document.getElementById(i)}
+function petal(L,W,sh){
+  if(sh==='pointed')return 'M0,0C'+(-W)+','+(-L*.3)+' '+(-W*.6)+','+(-L*.9)+' 0,'+(-L)+'C'+(W*.6)+','+(-L*.9)+' '+W+','+(-L*.3)+' 0,0Z';
+  if(sh==='notched')return 'M0,0C'+(-W)+','+(-L*.3)+' '+(-W)+','+(-L)+' '+(-W*.3)+','+(-L)+'Q0,'+(-L*.86)+' '+(W*.3)+','+(-L)+'C'+W+','+(-L)+' '+W+','+(-L*.3)+' 0,0Z';
+  return 'M0,0C'+(-W)+','+(-L*.2)+' '+(-W)+','+(-L)+' 0,'+(-L)+'C'+W+','+(-L)+' '+W+','+(-L*.2)+' 0,0Z';
+}
+function head(s){
+  var o='',cols=[s.c1,s.c2,s.c1];
+  for(var l=0;l<s.layers;l++){
+    var sc=1-l*.28,d=petal(s.length*sc,s.width*sc*(s.shape==='pointed'?.9:1),s.shape),off=l*(180/s.petals);
+    for(var k=0;k<s.petals;k++)o+='<path d="'+d+'" transform="rotate('+(off+k*360/s.petals)+')" fill="'+cols[l]+'" stroke="rgba(0,0,0,.18)" stroke-width="1.5"/>';
+  }
+  o+='<circle r="'+s.cr+'" fill="'+s.cc+'" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>';
+  var n=Math.round(s.cr*1.1);
+  for(var i=1;i<=n;i++){var r=s.cr*.88*Math.sqrt(i/n),a=i*2.39996;
+    o+='<circle cx="'+(r*Math.cos(a)).toFixed(1)+'" cy="'+(r*Math.sin(a)).toFixed(1)+'" r="1.8" fill="rgba(0,0,0,.3)"/>';}
+  return o;
+}
+function bouquet(list,bo,anim){
+  var o='<svg viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="520" fill="#fff1e6"/>',i;
+  if(bo.filler)for(i=0;i<FILL.length;i++){
+    o+='<line x1="'+FILL[i][0]+'" y1="'+FILL[i][1]+'" x2="200" y2="350" stroke="#4d7c0f" stroke-width="2"/>';
+    for(var j=0;j<4;j++)o+='<circle cx="'+(FILL[i][0]+(j%2?6:-5))+'" cy="'+(FILL[i][1]+(j<2?-5:5))+'" r="4.5" fill="#fff" stroke="rgba(0,0,0,.12)"/>';
+  }
+  var idx=list.map(function(_,k){return k}).sort(function(a,b){return SLOTS[a][1]-SLOTS[b][1]});
+  idx.forEach(function(k){o+='<line x1="'+SLOTS[k][0]+'" y1="'+SLOTS[k][1]+'" x2="200" y2="350" stroke="'+list[k].stem+'" stroke-width="6" stroke-linecap="round"/>'});
+  idx.forEach(function(k){var p=SLOTS[k];
+    var g='<g transform="translate('+p[0]+','+p[1]+') scale('+p[2]+') rotate('+(k*47%360)+')">'+head(list[k])+'</g>';
+    o+=anim?'<g class="pop" style="transform-origin:'+p[0]+'px '+p[1]+'px;animation-delay:'+(0.3+k*.25)+'s">'+g+'</g>':g;});
+  o+='<path d="M100,330Q200,365 300,330L228,505L172,505Z" fill="'+bo.wrap+'" stroke="rgba(0,0,0,.2)" stroke-width="1.5"/>';
+  o+='<path d="M100,330Q200,365 300,330" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="4"/><path d="M200,360L200,505" stroke="rgba(0,0,0,.08)" stroke-width="2"/>';
+  o+='<path d="M137,418L263,418L259,434L141,434Z" fill="'+bo.rib+'"/><ellipse cx="178" cy="428" rx="22" ry="12" fill="'+bo.rib+'" transform="rotate(-18 178 428)"/><ellipse cx="222" cy="428" rx="22" ry="12" fill="'+bo.rib+'" transform="rotate(18 222 428)"/><circle cx="200" cy="427" r="7" fill="'+bo.rib+'" stroke="rgba(0,0,0,.2)"/>';
+  return o+'</svg>';
+}
+function render(){
+  var o='<svg viewBox="0 0 400 520" xmlns="http://www.w3.org/2000/svg"><rect width="400" height="520" fill="'+S.bg+'"/>';
+  o+='<path d="M200,190C190,300 215,400 200,510" stroke="'+S.stem+'" stroke-width="9" fill="none" stroke-linecap="round"/>';
+  if(S.leaves)o+='<path d="M203,370C250,330 290,340 310,320C300,370 260,395 203,370Z" fill="'+S.stem+'"/><path d="M198,430C150,395 110,405 90,385C100,435 140,455 198,430Z" fill="'+S.stem+'" opacity=".85"/>';
+  o+='<g transform="translate(200,190)">'+head(S)+'</g></svg>';
+  $('view').innerHTML=o;$('cap').textContent=S.name||'Your flower';
+}
+function renderB(){
+  $('bview').innerHTML=bouquet(B,BO,false);
+  $('bcap').textContent=B.length?'':'Add a flower to begin';
+  var t=$('thumbs');t.innerHTML='';
+  B.forEach(function(f,k){var b=document.createElement('button');b.title='Remove '+(f.name||'flower');
+    b.innerHTML='<svg viewBox="-155 -155 310 310">'+head(f)+'</svg>';
+    b.onclick=function(){B.splice(k,1);renderB();count()};t.appendChild(b)});
+  if(!B.length)t.innerHTML='<span class="hint">No flowers yet.</span>';
+  seg('filler',[[true,'Filler on'],[false,'Filler off']],BO.filler,function(v){BO.filler=v;renderB()});
+}
+function count(){$('t2').textContent='2. Your bouquet ('+B.length+')';$('add').disabled=B.length>=9;$('add').textContent=B.length>=9?'Bouquet is full':'Add to bouquet'}
+function seg(id,opts,cur,fn){
+  var el=$(id);el.innerHTML='';
+  opts.forEach(function(p){var b=document.createElement('button');b.textContent=p[1];if(p[0]===cur)b.className='on';
+    b.onclick=function(){fn(p[0]);if(id!=='filler')sync()};el.appendChild(b)});
+}
+function sync(){
+  [['petals','petals_r'],['length','length'],['width','width'],['cr','cr']].forEach(function(p){$(p[1]).value=S[p[0]];$(p[0]+'_v').textContent=S[p[0]]});
+  ['c1','c2','cc','stem','bg'].forEach(function(k){$(k).value=S[k]});
+  $('name').value=S.name;
+  seg('shape',[['round','Round'],['pointed','Pointed'],['notched','Notched']],S.shape,function(v){S.shape=v});
+  seg('layers',[[1,'1 layer'],[2,'2 layers'],[3,'3 layers']],S.layers,function(v){S.layers=v});
+  seg('leaves',[[true,'Leaves on'],[false,'Leaves off']],S.leaves,function(v){S.leaves=v});
+  render();
+}
+[['petals','petals_r'],['length','length'],['width','width'],['cr','cr']].forEach(function(p){
+  $(p[1]).oninput=function(){S[p[0]]=+this.value;$(p[0]+'_v').textContent=S[p[0]];render()}});
+['c1','c2','cc','stem','bg'].forEach(function(k){$(k).oninput=function(){S[k]=this.value;render()}});
+$('name').oninput=function(){S.name=this.value;render()};
+PAL.forEach(function(c){var i=document.createElement('i');i.style.background=c;i.title=c;
+  i.onclick=function(){S.c1=c;S.c2=LIGHT[c];sync()};$('sw').appendChild(i)});
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+$('rand').onclick=function(){var c=pick(PAL);
+  S.petals=3+Math.floor(Math.random()*22);S.length=80+Math.floor(Math.random()*65);S.width=22+Math.floor(Math.random()*46);
+  S.cr=14+Math.floor(Math.random()*28);S.shape=pick(['round','pointed','notched']);S.layers=1+Math.floor(Math.random()*3);
+  S.c1=c;S.c2=LIGHT[c];S.cc=pick(['#facc15','#92400e','#f97316','#7c2d12']);sync()};
+$('reset').onclick=function(){S=Object.assign({},DEF);sync()};
+$('add').onclick=function(){if(B.length<9){B.push(Object.assign({},S));count();tab(2)}};
+$('clear').onclick=function(){B=[];renderB();count()};
+$('more').onclick=function(){tab(1)};
+$('wrap').oninput=function(){BO.wrap=this.value;renderB()};
+$('rib').oninput=function(){BO.rib=this.value;renderB()};
+function tab(n){
+  $('p1').classList.toggle('hide',n!==1);$('p2').classList.toggle('hide',n!==2);
+  $('t1').className=n===1?'on':'';$('t2').className=n===2?'on':'';
+  if(n===2)renderB();
+}
+$('t1').onclick=function(){tab(1)};$('t2').onclick=function(){tab(2)};
+
+var cur=1;
+function go(n){
+  cur=n;
+  for(var i=1;i<=3;i++)$('s'+i).classList.toggle('on',i===n);
+  var d=document.querySelectorAll('.dots i');for(i=0;i<3;i++)d[i].className=i===n-1?'on':'';
+  $('back').style.visibility=n===1?'hidden':'visible';
+  $('next').style.display=n===3?'none':'';
+  $('next').textContent=n===2?'Make your own':'Next';
+  $('petals').className='petals'+(n<3?' on':'');
+  if(n===2)$('gview').innerHTML=bouquet(GIFT,GBO,true);
+  window.scrollTo(0,0);
+}
+$('next').onclick=function(){if(cur<3)go(cur+1)};
+$('back').onclick=function(){if(cur>1)go(cur-1)};
+(function(){
+  var p=$('petals'),h='';
+  for(var i=0;i<16;i++){var s=10+Math.random()*14;
+    h+='<span style="left:'+(Math.random()*100)+'%;width:'+s+'px;height:'+s+'px;background:'+PAL[i%PAL.length]+';animation-duration:'+(7+Math.random()*7)+'s;animation-delay:-'+(Math.random()*12)+'s"></span>';}
+  p.innerHTML=h;
+})();
+$('wrap').value=BO.wrap;$('rib').value=BO.rib;
+sync();count();go(1);
+</script>
+</body>
+</html>
