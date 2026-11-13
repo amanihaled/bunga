@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Datin Fateehah Dah Grad!!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#fdf8f3;--card:#fff;--ink:#2a2230;--muted:#7a6f80;--line:#eadfe6;--accent:#d946a0;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -45,6 +48,12 @@ button:disabled{opacity:.45;cursor:default}
 .thumbs svg{width:100%;height:100%}
 .hint{color:var(--muted);font-size:13px}
 .hide{display:none}
+.modal{position:fixed;inset:0;background:rgba(20,10,30,.62);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.modal.on{display:flex}
+.mbox{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;max-width:400px;width:100%;max-height:94vh;overflow:auto;text-align:center}
+.mbox img{width:100%;height:auto;display:block;border-radius:8px;margin-bottom:12px}
+.mbox .seg{justify-content:center}
+.mbox .hint{margin:10px 0 0}
 .nav{display:flex;justify-content:space-between;align-items:center;margin-top:26px;min-height:40px}
 .dots{display:flex;gap:8px}.dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}.dots i.on{background:var(--accent)}
 .petals{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:0;display:none}
@@ -76,7 +85,8 @@ button:disabled{opacity:.45;cursor:default}
 
   <div id="p1" class="grid">
     <div class="card stage"><div class="view" id="view"></div><div class="cap" id="cap"></div>
-      <button class="pri" id="add">Add to bouquet</button></div>
+      <button class="pri" id="add">Add to bouquet</button>
+      <button id="save1">Save to gallery</button></div>
     <div class="card ctl">
       <input type="text" id="name" maxlength="28" placeholder="Name your flower" aria-label="Flower name">
       <div class="row"><label>Petals</label><input type="range" id="petals_r" min="3" max="24"><span id="petals_v"></span></div>
@@ -96,7 +106,8 @@ button:disabled{opacity:.45;cursor:default}
   </div>
 
   <div id="p2" class="grid hide">
-    <div class="card stage"><div class="view" id="bview"></div><div class="cap" id="bcap"></div></div>
+    <div class="card stage"><div class="view" id="bview"></div><div class="cap" id="bcap"></div>
+      <button class="pri" id="save2">Save to gallery</button></div>
     <div class="card ctl">
       <div class="hint">Kalau nak remove, tap je dekat bunga tu. Kalau nak add lagi pergi design tab.</div>
       <div class="thumbs" id="thumbs"></div>
@@ -109,6 +120,11 @@ button:disabled{opacity:.45;cursor:default}
 </section>
 
 <div class="nav"><button id="back">Back</button><div class="dots"><i></i><i></i><i></i></div><button id="next" class="pri">Next</button></div>
+<div class="modal" id="modal"><div class="mbox">
+  <img id="pimg" alt="Your polaroid">
+  <div class="seg"><button class="pri" id="msave">Save to gallery</button><button id="mclose">Close</button></div>
+  <div class="hint">Kalau tak keluar button save, tekan lama gambar tu, pastu Save to Photos/Gallery</div>
+</div></div>
 </main>
 <script>
 var DEF={name:'',petals:12,length:115,width:44,cr:28,shape:'round',layers:2,c1:'#f472b6',c2:'#fbcfe8',cc:'#facc15',stem:'#4d7c0f',bg:'#fff1e6',leaves:true};
@@ -175,7 +191,7 @@ function renderB(){
   if(!B.length)t.innerHTML='<span class="hint">No flowers yet.</span>';
   seg('filler',[[true,'Filler on'],[false,'Filler off']],BO.filler,function(v){BO.filler=v;renderB()});
 }
-function count(){$('t2').textContent='2. Your bouquet ('+B.length+')';$('add').disabled=B.length>=9;$('add').textContent=B.length>=9?'Bouquet is full':'Add to bouquet'}
+function count(){$('t2').textContent='2. Your bouquet ('+B.length+')';$('add').disabled=B.length>=9;$('save2').disabled=!B.length;$('add').textContent=B.length>=9?'Bouquet is full':'Add to bouquet'}
 function seg(id,opts,cur,fn){
   var el=$(id);el.innerHTML='';
   opts.forEach(function(p){var b=document.createElement('button');b.textContent=p[1];if(p[0]===cur)b.className='on';
@@ -213,6 +229,45 @@ function tab(n){
   if(n===2)renderB();
 }
 $('t1').onclick=function(){tab(1)};$('t2').onclick=function(){tab(2)};
+
+/* ---- polaroid + save to gallery ---- */
+var CV=null;
+function loadImg(src){return new Promise(function(res,rej){var i=new Image();i.onload=function(){res(i)};i.onerror=rej;i.src=src})}
+function polaroid(svg,bg){
+  var W=640,H=820,K=2,c=document.createElement('canvas');c.width=W*K;c.height=H*K;
+  var x=c.getContext('2d');x.scale(K,K);
+  x.fillStyle='#fdf8f3';x.fillRect(0,0,W,H);
+  x.save();x.shadowColor='rgba(60,30,60,.28)';x.shadowBlur=24;x.shadowOffsetY=8;x.fillStyle='#fff';x.fillRect(20,20,600,780);x.restore();
+  x.fillStyle=bg;x.fillRect(60,60,520,520);
+  if(svg.indexOf('xmlns=')<0)svg=svg.replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ');
+  var url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg.replace('<svg ','<svg width="400" height="520" '));
+  var fl=(document.fonts&&document.fonts.load)?document.fonts.load('700 36px Caveat').catch(function(){}):Promise.resolve();
+  return Promise.all([loadImg(url),fl]).then(function(r){
+    x.drawImage(r[0],120,60,400,520);
+    x.strokeStyle='rgba(0,0,0,.08)';x.lineWidth=1;x.strokeRect(60,60,520,520);
+    x.fillStyle='#4a3350';x.textAlign='center';
+    x.font='700 36px Caveat,"Segoe Script","Bradley Hand",cursive';
+    x.fillText('You’ve come so far.',320,640);
+    x.fillText('I’m very very very proud of you',320,686);
+    x.textAlign='right';x.fillText('-Amani',556,746);
+    return c;
+  });
+}
+function openSave(svg,bg){
+  polaroid(svg,bg).then(function(c){CV=c;$('pimg').src=c.toDataURL('image/png');$('modal').classList.add('on')});
+}
+$('save1').onclick=function(){openSave($('view').innerHTML,S.bg)};
+$('save2').onclick=function(){if(B.length)openSave(bouquet(B,BO,false),'#fff1e6')};
+$('mclose').onclick=function(){$('modal').classList.remove('on')};
+$('modal').onclick=function(e){if(e.target===this)this.classList.remove('on')};
+$('msave').onclick=function(){
+  if(!CV)return;
+  CV.toBlob(function(b){
+    var f=new File([b],'flower-for-fateehah.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f]}).catch(function(){})}
+    else{var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=f.name;document.body.appendChild(a);a.click();a.remove()}
+  },'image/png');
+};
 
 var cur=1;
 function go(n){
